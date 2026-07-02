@@ -1,0 +1,81 @@
+name: ZTV CI
+
+# Continuous integration for the Zero-Trust Vault native host + extension.
+# Runs on Windows because the host depends on WinRT (Windows Hello) and CNG.
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-test-verify:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # ---- Build ----
+      - name: Restore
+        run: dotnet restore native-host/src/ZeroTrustVaultHost/ZeroTrustVaultHost.csproj
+
+      - name: Build (Release)
+        run: dotnet build native-host/src/ZeroTrustVaultHost/ZeroTrustVaultHost.csproj -c Release --no-restore
+
+      # ---- Tests (crypto, sync, recovery, corrupt-vault, hello, logging) ----
+      - name: Test
+        run: dotnet test native-host/src/ZeroTrustVaultHost.Tests/ZeroTrustVaultHost.Tests.csproj -c Debug --verbosity quiet
+
+      # ---- Forbidden-string scan (source + extension; flags bypasses & stubs) ----
+      - name: Forbidden-string scan
+        shell: pwsh
+        run: ./tools/check-forbidden-strings.ps1
+
+      # ---- Dependency vulnerability scan (fails on any vulnerable package) ----
+      - name: Dependency vulnerability scan
+        shell: pwsh
+        run: ./tools/dependency-scan.ps1
+
+      # ---- Extension CSP & least-privilege permission audit ----
+      - name: Extension CSP & permission audit
+        shell: pwsh
+        run: ./tools/audit-extension-csp.ps1
+
+      # ---- SBOM generation ----
+      - name: Generate SBOM
+        shell: pwsh
+        run: ./tools/generate-sbom.ps1
+
+      # ---- Release verification: diagnostic logging OFF, no bypass strings in binary ----
+      - name: Verify release artifact
+        shell: pwsh
+        run: |
+          $relDir = "native-host/src/ZeroTrustVaultHost/bin/Release/net9.0-windows10.0.22621.0"
+          ./tools/verify-release.ps1 -HostDir $relDir
+
+      # ---- Extension integrity hashes match what the service worker enforces ----
+      - name: Verify extension integrity hashes
+        shell: pwsh
+        run: ./tools/verify-extension-integrity.ps1
+
+      # ---- Upload SBOM as a build artifact ----
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: ztv-sbom
+          path: dist/SBOM.json
+        if: always()
+
+  # NOTE: a SIGNED-release job (real code-signing certificate) and an EXTERNAL
+  # third-party audit are still required for the "ZTV Final Target" rating and
+  # are intentionally NOT present here — they require a CA-issued certificate and
+  # a human auditor, which CI cannot self-certify. Tracked in
+  # AUDIT_PACKAGE/KNOWN_LIMITATIONS.md and EXTERNAL_AUDIT_REQUEST.md.

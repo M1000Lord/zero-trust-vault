@@ -1,0 +1,25 @@
+# Build artifacts
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+
+# Staged/bundled binaries produced by build/package scripts (not source)
+native-host/host/
+native-host/publish/
+native-host/installer/windows/host/
+dist/
+
+# IDE / OS
+.vs/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+
+# Local vault/runtime data (must never be committed)
+vault.json
+security-events.log
+*.pfx
+*.p12
+*.snk

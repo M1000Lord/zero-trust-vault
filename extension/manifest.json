@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Zero-Trust Vault",
+  "version": "2.0.0",
+  "description": "Local-first Windows Hello credential vault. Exact-origin fill. No cloud, no sync, no plaintext metadata.",
+  "minimum_chrome_version": "127",
+  "permissions": [
+    "nativeMessaging",
+    "activeTab",
+    "scripting",
+    "storage",
+    "alarms",
+    "tabs",
+    "windows"
+  ],
+  "host_permissions": [],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "service_worker.js",
+    "type": "module"
+  },
+  "icons": {
+    "16":  "icon16.png",
+    "32":  "icon32.png",
+    "48":  "icon48.png",
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_title": "Zero-Trust Vault",
+    "default_icon": {
+      "16":  "icon16.png",
+      "32":  "icon32.png",
+      "48":  "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';"
+  }
+}

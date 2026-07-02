@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0-windows10.0.22621.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <AssemblyName>ZeroTrustVaultHost</AssemblyName>
+    <RootNamespace>ZeroTrustVaultHost</RootNamespace>
+    <UseWindowsForms>false</UseWindowsForms>
+    <UseWPF>false</UseWPF>
+  </PropertyGroup>
+
+  <!-- Diagnostic-logging build status, surfaced as assembly metadata so that
+       verify-release.ps1 can fail any release built with verbose logging on. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <ZtvDiagLogging>enabled</ZtvDiagLogging>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' != 'Debug'">
+    <ZtvDiagLogging>disabled</ZtvDiagLogging>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="ZtvDiagLogging" Value="$(ZtvDiagLogging)" />
+    <AssemblyMetadata Include="ZtvBuildConfiguration" Value="$(Configuration)" />
+  </ItemGroup>
+
+  <!-- Release-mode safety guard: fail the build if DEBUG symbols are present in Release -->
+  <Target Name="CheckReleaseSafety" BeforeTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <Error Condition="$(DefineConstants.Contains('DEBUG'))" Text="Release build must not define DEBUG. Check project configuration." />
+    <Message Text="Release safety check passed: no DEBUG symbols; diagnostic logging=$(ZtvDiagLogging)." Importance="high" />
+  </Target>
+
+  <!-- Deterministic, machine-readable build manifest written next to the output.
+       verify-release.ps1 reads this and fails the release if diagnosticLogging=enabled. -->
+  <Target Name="WriteBuildInfo" AfterTargets="Build">
+    <WriteLinesToFile
+      File="$(OutputPath)build-info.json"
+      Overwrite="true"
+      Lines="{ &quot;configuration&quot;: &quot;$(Configuration)&quot;, &quot;diagnosticLogging&quot;: &quot;$(ZtvDiagLogging)&quot;, &quot;codeVersion&quot;: &quot;2.0.0&quot;, &quot;builtAtUtc&quot;: &quot;$([System.DateTime]::UtcNow.ToString('o'))&quot; }" />
+    <Message Text="Wrote build-info.json (configuration=$(Configuration), diagnosticLogging=$(ZtvDiagLogging))." Importance="high" />
+  </Target>
+
+  <Target Name="WritePublishBuildInfo" AfterTargets="Publish">
+    <WriteLinesToFile
+      File="$(PublishDir)build-info.json"
+      Overwrite="true"
+      Lines="{ &quot;configuration&quot;: &quot;$(Configuration)&quot;, &quot;diagnosticLogging&quot;: &quot;$(ZtvDiagLogging)&quot;, &quot;codeVersion&quot;: &quot;2.0.0&quot;, &quot;builtAtUtc&quot;: &quot;$([System.DateTime]::UtcNow.ToString('o'))&quot; }" />
+    <Message Text="Wrote publish build-info.json (configuration=$(Configuration), diagnosticLogging=$(ZtvDiagLogging))." Importance="high" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+</Project>

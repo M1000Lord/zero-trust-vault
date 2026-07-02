@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="popup.css" />
+  <link rel="icon" type="image/png" sizes="128x128" href="icon128.png" />
+  <link rel="icon" type="image/png" sizes="48x48"  href="icon48.png" />
+  <link rel="icon" type="image/png" sizes="32x32"  href="icon32.png" />
+  <link rel="icon" type="image/png" sizes="16x16"  href="icon16.png" />
+  <title>Zero-Trust Vault</title>
+</head>
+<body>
+
+  <header class="bar">
+    <span class="brand">🔐 Zero-Trust Vault</span>
+    <div class="bar-right">
+      <span id="lockBadge" class="badge locked">LOCKED</span>
+      <button id="healthToggle" class="icon-btn" title="Security Health" aria-label="Security Health">🛡</button>
+      <button id="settingsToggle" class="icon-btn" title="Settings" aria-label="Settings">⚙</button>
+    </div>
+  </header>
+
+  <div id="healthPanel" class="health-panel hidden">
+    <div class="health-title">🛡 Security Health</div>
+    <div id="healthItems" class="health-items"></div>
+  </div>
+
+  <div id="settingsPanel" class="settings-panel hidden">
+    <div class="setting-mode">
+      <span id="modeText" class="mode-label">Ultra Security Mode</span>
+      <span class="mode-hint">No auto-submit · Metadata encrypted · Fresh Hello per fill</span>
+    </div>
+    <label class="toggle-row">
+      <input id="convenienceToggle" type="checkbox" />
+      <span class="toggle-label">
+        <span>Convenience detector</span>
+        <small>Badges the icon when a login form is detected (needs optional HTTPS host permission)</small>
+      </span>
+    </label>
+    <label class="toggle-row" id="autoPromptRow">
+      <input id="autoPromptToggle" type="checkbox" />
+      <span class="toggle-label">
+        <span>Auto-unlock on open for this site</span>
+        <small>Triggers Windows Hello immediately when you open the vault here</small>
+      </span>
+    </label>
+    <label class="toggle-row">
+      <input id="clipboardToggle" type="checkbox" />
+      <span class="toggle-label">
+        <span>Advanced clipboard copy</span>
+        <small>Off by default. Copied secrets require Windows Hello and clear after 15 seconds.</small>
+      </span>
+    </label>
+    <div class="timeout-row">
+      <span class="toggle-label">
+        <span>Auto-lock after closing</span>
+        <small>How long before the vault locks itself after you close this popup</small>
+      </span>
+      <select id="timeoutSelect">
+        <option value="0">Immediately</option>
+        <option value="5">5 minutes</option>
+        <option value="15" selected>15 minutes</option>
+        <option value="30">30 minutes</option>
+        <option value="60">1 hour</option>
+      </select>
+    </div>
+  </div>
+
+  <section class="origin-section">
+    <div class="label">Current site</div>
+    <div id="origin" class="origin-value">—</div>
+    <div id="alerts" class="alerts"></div>
+  </section>
+
+  <section class="actions">
+    <button id="unlockBtn" class="primary full">🔐 Unlock with Windows Hello</button>
+    <button id="lockBtn" class="ghost full hidden">Lock vault</button>
+  </section>
+
+  <section id="accounts" class="accounts hidden">
+    <div class="section-head">
+      <span class="label">Accounts for this site</span>
+      <span class="meta-note">Fill requires Hello</span>
+    </div>
+    <div class="search-row hidden" id="searchRow">
+      <input id="searchInput" type="search" placeholder="Search credentials…" autocomplete="off" spellcheck="false" />
+    </div>
+    <ul id="accountList" class="account-list"></ul>
+  </section>
+
+  <section id="addSection" class="add-section hidden">
+    <button id="toggleAdd" class="ghost full add-toggle">+ Save new credential</button>
+    <div id="addForm" class="add-form hidden">
+      <input id="addUser" type="text" placeholder="username or email" autocomplete="off" spellcheck="false" />
+      <div class="pass-row">
+        <input id="addPass" type="password" placeholder="password" autocomplete="off" spellcheck="false" />
+        <button id="genPassBtn" type="button" class="icon-btn" title="Generate strong password">⟳</button>
+        <button id="revealPassBtn" type="button" class="icon-btn" title="Show / hide password">👁</button>
+      </div>
+      <div id="strengthRow" class="strength-row hidden">
+        <div class="strength-track"><div id="strengthBar" class="strength-fill"></div></div>
+        <span id="strengthLabel" class="strength-label"></span>
+      </div>
+      <input id="addLabel" type="text" placeholder="label (optional, stored encrypted)" autocomplete="off" />
+      <input id="addTotp" type="text" placeholder="2FA / TOTP secret (optional, e.g. JBSWY3DPEHPK3PXP)" autocomplete="off" spellcheck="false" />
+      <button id="saveBtn" class="primary">Save  (requires Windows Hello)</button>
+    </div>
+  </section>
+
+  <footer id="status" class="status"></footer>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
